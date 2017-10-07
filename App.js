@@ -11,7 +11,8 @@ import {
   Text,
   View,
   FlatList,
-  Button
+  Button,
+  TouchableNativeFeedback
 } from 'react-native';
 
 const instructions = Platform.select({
@@ -27,6 +28,7 @@ export default class App extends Component<{}> {
   constructor(props) {
     super(props)
     this.onDone = this.onDone.bind(this);
+    this.onAdd = this.onAdd.bind(this);
     this.state = {
       data: [
         {
@@ -142,6 +144,19 @@ export default class App extends Component<{}> {
   onDate() {
     //return new Date.toString;
   }
+  onAdd() {
+    let data = this.state.data;
+    alert('teste');
+    data.push({
+      key: data.length + 1,
+      name: 'Tarefa ' + (data.length + 1),
+      done: false,
+    })
+
+    this.setState({
+      data: data
+    })
+  }
 
   onDone(key) {
     let data = this.state.data;
@@ -172,20 +187,28 @@ export default class App extends Component<{}> {
         <View style={{flexDirection: 'column', justifyContent: 'center', height:125,  alignItems:'center', backgroundColor: 'rgba(0,0,0,0.3)'}}>
           <Text style={{fontSize: 35}}>{dateEvent}</Text>
         </View>
-        <FlatList
-          data={dataList}
-          renderItem={({item}) => 
-            <View style={{flexDirection:'row',padding: 10,height: 44, borderBottomWidth:1}}>
-              <Button 
-                title={(item.done == true) ? 'I' : 'A'} 
-                onPress={() => this.onDone(item.key)}
-                style={{width:56}}
-              />
-
-              <Text style={{paddingLeft: 10}}>{item.name}</Text>
+        <View style={{position:'absolute', display:'flex', bottom:150,height:100, left:100, justifyContent:'center', alignItems:'center', backgroundColor:'transparent'}}>
+          <TouchableNativeFeedback
+              onPress={() => {this.onAdd()}}
+              background={TouchableNativeFeedback.SelectableBackground()}>
+            <View style={{width: 100, height: 50, backgroundColor: '#000', justifyContent:'center', alignItems:'center'}}>
+              <Text style={{color:"#FFF"}}>Adicionar</Text>
             </View>
-          }
-        />
+          </TouchableNativeFeedback>
+        </View>
+          <FlatList
+            data={dataList}
+            renderItem={({item}) => 
+              <View style={{flexDirection:'row',padding: 10,height: 44, borderBottomWidth:1}}>
+                <Button 
+                  title={(item.done == true) ? 'I' : 'A'} 
+                  onPress={() => this.onDone(item.key)}
+                  style={{width:56}}
+                />
+                <Text style={{paddingLeft: 10}}>{item.name}</Text>
+              </View>
+            }
+          />
       </View>
     );
   }
