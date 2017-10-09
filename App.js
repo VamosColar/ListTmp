@@ -12,23 +12,18 @@ import {
   View,
   FlatList,
   Button,
-  TouchableNativeFeedback
+  TouchableHighlight,
+  TouchableOpacity,
+  Alert
 } from 'react-native';
 
-const instructions = Platform.select({
-  ios: 'Press Cmd+R to reload,\n' +
-    'Cmd+D or shake for dev menu',
-  android: 'Double tap R keyboard to reload,\n' +
-    'Shake or press menu button for dev menu',
-});
-
-
+import NavBar from './components/NavBar';
 
 export default class App extends Component<{}> {
   constructor(props) {
+    let dateList = new Date();
     super(props)
     this.onDone = this.onDone.bind(this);
-    this.onAdd = this.onAdd.bind(this);
     this.state = {
       data: [
         {
@@ -133,10 +128,12 @@ export default class App extends Component<{}> {
         },
         {
           key: 21,
-          name: 'tarefa 7',
+          name: 'tarefa final',
           done: false 
         }
-      ]
+      ],
+      dateEvent: dateList.getDate()+'/'+dateList.getMonth()+'/'+dateList.getFullYear(),
+      dayEvent: dateWekly(dateList.getUTCDay())
     }
     //this.onDate = this.onDate.bind(this)
   }
@@ -146,7 +143,6 @@ export default class App extends Component<{}> {
   }
   onAdd() {
     let data = this.state.data;
-    alert('teste');
     data.push({
       key: data.length + 1,
       name: 'Tarefa ' + (data.length + 1),
@@ -175,61 +171,107 @@ export default class App extends Component<{}> {
   }
 
   render() {
-    let dateEvent = '12/12/2017';
+    let dateEvent = this.state.dateEvent;
     let dataList = this.state.data;
+    let dayEvent = this.state.dayEvent;
+
     return (
-      <View>
-        <View style={styles.container}>
-          <Text>Menu</Text>
-          <Text>List-TMP</Text>
-          <Text>Busca</Text>
+      <View style={styles.container}>
+        <View style={{height:200, flexDirection:'column'}}>
+          <NavBar />
+          <View style={{ height:150, justifyContent: 'center', alignItems:'center', backgroundColor: '#50D2C2' }}>
+              <Text style={styles.textDate}>{dateEvent}</Text>
+              <Text style={styles.dayEventCss}>{dayEvent.toUpperCase()}</Text>
+          </View>
         </View>
-        <View style={{flexDirection: 'column', justifyContent: 'center', height:125,  alignItems:'center', backgroundColor: 'rgba(0,0,0,0.3)'}}>
-          <Text style={{fontSize: 35}}>{dateEvent}</Text>
-        </View>
-        <View style={{position:'absolute', display:'flex', bottom:150,height:100, left:100, justifyContent:'center', alignItems:'center', backgroundColor:'transparent'}}>
-          <TouchableNativeFeedback
-              onPress={() => {this.onAdd()}}
-              background={TouchableNativeFeedback.SelectableBackground()}>
-            <View style={{width: 100, height: 50, backgroundColor: '#000', justifyContent:'center', alignItems:'center'}}>
-              <Text style={{color:"#FFF"}}>Adicionar</Text>
-            </View>
-          </TouchableNativeFeedback>
-        </View>
+        <View style={{ flex: 1 }}>
           <FlatList
+            style={{marginLeft: 10}}
             data={dataList}
             renderItem={({item}) => 
-              <View style={{flexDirection:'row',padding: 10,height: 44, borderBottomWidth:1}}>
-                <Button 
-                  title={(item.done == true) ? 'I' : 'A'} 
-                  onPress={() => this.onDone(item.key)}
-                  style={{width:56}}
-                />
-                <Text style={{paddingLeft: 10}}>{item.name}</Text>
+              <View style={{ flexDirection:'row', height: 70, borderBottomWidth: 0.2 }}>
+        
+                <View style={{width:50, height:70, justifyContent:'center', alignItems:'center'}}>
+                  <TouchableOpacity
+                    style={{borderRadius: 30, width:50, height:50, backgroundColor: '#50D2C2', alignItems: 'center', justifyContent: 'center'}}
+                    onPress={() => this.onDone(item.key)}>
+                    <Text style={{color: '#FFF'}}>{(item.done == true) ? 'I' : 'A'}</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={{alignItems:'center', justifyContent:'center', marginLeft: 25}}>
+                  <Text style={styles.listLine}>{item.name}</Text>
+                </View>
+                
               </View>
-            }
-          />
+            }/>
+          </View>
+          <TouchableOpacity
+            style={styles.buttonAdd}
+            onPress={this.onAdd.bind(this)}>
+            <Text style={styles.actionText}>+</Text>
+          </TouchableOpacity>
       </View>
     );
   }
 }
 
+const dateWekly = (day) => {
+  switch(day) {
+    case 0:
+      return 'Domingo';
+    case 1:
+      return 'Segunda';
+    case 2:
+      return 'Terça';
+    case 3:
+      return 'Quarta';
+    case 4:
+      return 'Quinta';
+    case 5:
+      return 'Sexta';
+    case 6:
+      return 'Sábado';
+  }
+}
+
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    height: 50,
-    backgroundColor: '#BA77FF',
-    alignItems: 'flex-end'
+    flex: 1,
+    flexDirection: 'column',
+    backgroundColor: '#fff',
   },
-  welcome: {
-    fontSize: 20,
+  actionText: {
+    color: '#fff',
+    fontSize: 40,
     textAlign: 'center',
-    margin: 10,
+    fontWeight: '100'
   },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
+  buttonAdd: {
+    width: 60,
+    height: 60,
+    backgroundColor:'#BA77FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    padding: 0,
+    borderRadius: 30
   },
+  textDate: {
+    fontSize: 35,
+    fontWeight: '100',
+    color: '#FFF'
+  },
+  dayEventCss: {
+    marginTop: 0,
+    fontSize: 11,
+    color: '#FFF',
+    fontWeight: 'bold'
+  },
+  listLine: {
+    fontSize: 14,
+    fontWeight: '100',
+  }
 });
