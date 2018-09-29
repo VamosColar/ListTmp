@@ -5,6 +5,11 @@
  */
 
 import React, { Component } from 'react';
+import * as firebase from 'firebase';
+import Svg,{
+  G,
+  Polyline,
+} from 'react-native-svg';
 import {
   Platform,
   StyleSheet,
@@ -14,160 +19,99 @@ import {
   Button,
   TouchableHighlight,
   TouchableOpacity,
-  Alert
+  Modal,
+  TextInput
 } from 'react-native';
 
 import NavBar from './components/NavBar';
 
+var config = {
+  apiKey: "AIzaSyCJzs5FYtM4k7IHtLeUMXEL9KdMs7UgF5Y",
+  authDomain: "listapptmp.firebaseapp.com",
+  databaseURL: "https://listapptmp.firebaseio.com",
+  projectId: "listapptmp",
+  storageBucket: "",
+  messagingSenderId: "945148779121"
+};
+let firebaseApp;
+
+if (!firebase.apps.length) {
+   firebaseApp = firebase.initializeApp(config);
+};
+
 export default class App extends Component<{}> {
   constructor(props) {
     let dateList = new Date();
+    let ListActual = dateList.getDate()+'/'+dateList.getMonth()+'/'+dateList.getFullYear()
+    let firebaseDatabase = dateList.getDate()+'-'+dateList.getMonth()+'-'+dateList.getFullYear()
     super(props)
     this.onDone = this.onDone.bind(this);
     this.state = {
-      data: [
-        {
-          key: 1,
-          name: 'tarefa 1',
-          done: false 
-        },
-        {
-          key: 2,
-          name: 'tarefa 2',
-          done: false 
-        },
-        {
-          key: 3,
-          name: 'tarefa 3',
-          done: false 
-        },
-        {
-          key: 4,
-          name: 'tarefa 4',
-          done: false 
-        },
-        {
-          key: 5,
-          name: 'tarefa 5',
-          done: false 
-        },
-        {
-          key: 6,
-          name: 'tarefa 6',
-          done: false 
-        },
-        {
-          key: 7,
-          name: 'tarefa 7',
-          done: false 
-        },
-        {
-          key: 8,
-          name: 'tarefa 1',
-          done: false 
-        },
-        {
-          key: 9,
-          name: 'tarefa 2',
-          done: false 
-        },
-        {
-          key: 10,
-          name: 'tarefa 3',
-          done: false 
-        },
-        {
-          key: 11,
-          name: 'tarefa 4',
-          done: false 
-        },
-        {
-          key: 12,
-          name: 'tarefa 5',
-          done: false 
-        },
-        {
-          key: 13,
-          name: 'tarefa 6',
-          done: false 
-        },
-        {
-          key: 14,
-          name: 'tarefa 7',
-          done: false 
-        },
-        {
-          key: 15,
-          name: 'tarefa 1',
-          done: false 
-        },
-        {
-          key: 16,
-          name: 'tarefa 2',
-          done: false 
-        },
-        {
-          key: 17,
-          name: 'tarefa 3',
-          done: false 
-        },
-        {
-          key: 18,
-          name: 'tarefa 4',
-          done: false 
-        },
-        {
-          key: 19,
-          name: 'tarefa 5',
-          done: false 
-        },
-        {
-          key: 20,
-          name: 'tarefa 6',
-          done: false 
-        },
-        {
-          key: 21,
-          name: 'tarefa final',
-          done: false 
-        }
-      ],
+      modalVisible: false, 
+      text: '',     
+      data: [],
       dateEvent: dateList.getDate()+'/'+dateList.getMonth()+'/'+dateList.getFullYear(),
       dayEvent: dateWekly(dateList.getUTCDay())
     }
-    //this.onDate = this.onDate.bind(this)
+
+    this.itemsRef = this.getRef().child('items-' + firebaseDatabase);  
+  }
+
+  getRef() {
+    return firebaseApp.database().ref();
   }
 
   onDate() {
     //return new Date.toString;
   }
   onAdd() {
-    let data = this.state.data;
-    data.push({
-      key: data.length + 1,
-      name: 'Tarefa ' + (data.length + 1),
-      done: false,
-    })
-
-    this.setState({
-      data: data
-    })
+    this.setState({modalVisible: true});
   }
 
-  onDone(key) {
-    let data = this.state.data;
-    let newDate = [];
-    data.forEach((v) => {
-      if (v.key == key) {
-        v.done = true;
-      }
-      newDate.push(v);
+  onAddTask() {
+    let data = this.state.data
+
+    this.itemsRef.push({
+      name: this.state.text,
+      done: false
     })
 
     this.setState({
-      data: newDate
+      text: ''
     })
 
+    this.flatListRef.scrollToEnd();
+  }
+
+  setModalVisible(visible) {
+    this.setState({modalVisible: visible});
+  }
+
+  onDone = (item) => {
+    this.itemsRef.child(item.key).update({done: true})
+  }
+
+  renderDone = (item) => {
+    if (!item.done) {
+      return (
+        <TouchableOpacity
+        style={styles.inCheck}
+        onPress={() => {this.onDone(item)}}>
+      </TouchableOpacity>
+      )
+    } else {
+      return (
+        <TouchableOpacity style={styles.check} >
+          <Svg width="30" height="24">
+            <G id="do" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                <G id="8-List" transform="translate(-58.000000, -849.000000)" stroke-width="2" stroke="#FFFFFF">
+                    <Polyline id="shape" points="59 857.438829 66.3744 865 81 850"></Polyline>
+                </G>
+            </G>
+          </Svg>
+      </TouchableOpacity>
+      )
+    }
   }
 
   render() {
@@ -177,43 +121,106 @@ export default class App extends Component<{}> {
 
     return (
       <View style={styles.container}>
-        <View style={{height:200, flexDirection:'column'}}>
+        <View style={{height:225, flexDirection:'column'}}>
           <NavBar />
-          <View style={{ height:150, justifyContent: 'center', alignItems:'center', backgroundColor: '#50D2C2' }}>
-              <Text style={styles.textDate}>{dateEvent}</Text>
-              <Text style={styles.dayEventCss}>{dayEvent.toUpperCase()}</Text>
+          <View style={styles.subHeader}>
+              <Text style={styles.textDate}>Suas tarefas para hoje</Text>
+              <Text style={styles.dayEventCss}>{dateEvent} {dayEvent.toUpperCase()}</Text>
           </View>
         </View>
         <View style={{ flex: 1 }}>
           <FlatList
+            ref={(ref) => { this.flatListRef = ref }}
             style={{marginLeft: 10}}
             data={dataList}
             renderItem={({item}) => 
-              <View style={{ flexDirection:'row', height: 70, borderBottomWidth: 0.2 }}>
-        
-                <View style={{width:50, height:70, justifyContent:'center', alignItems:'center'}}>
-                  <TouchableOpacity
-                    style={{borderRadius: 30, width:50, height:50, backgroundColor: '#50D2C2', alignItems: 'center', justifyContent: 'center'}}
-                    onPress={() => this.onDone(item.key)}>
-                    <Text style={{color: '#FFF'}}>{(item.done == true) ? 'I' : 'A'}</Text>
-                  </TouchableOpacity>
+              <View style={styles.line}>
+      
+                <View style={{width:50, height:65, justifyContent:'center', alignItems:'center'}}>
+                  {this.renderDone(item)}
                 </View>
 
-                <View style={{alignItems:'center', justifyContent:'center', marginLeft: 25}}>
+                <View style={{alignItems:'center', justifyContent:'center', marginLeft: 10, paddingRight: 23}}>
                   <Text style={styles.listLine}>{item.name}</Text>
                 </View>
-                
               </View>
             }/>
+            
           </View>
           <TouchableOpacity
             style={styles.buttonAdd}
             onPress={this.onAdd.bind(this)}>
             <Text style={styles.actionText}>+</Text>
           </TouchableOpacity>
+          <Modal
+            animationType="fade"
+            transparent={true}
+            visible={this.state.modalVisible}
+            onRequestClose={() => {alert("Modal has been closed.")}}
+          >
+            <View style={styles.viewBoxModal}>
+              <View style={styles.viewModal}>
+                <View>
+                  <View style={styles.viewModalBoxHeader}>
+                    <Text style={styles.textModalHeader}>Nova Tarefa</Text>
+                  </View>
+                  <View style={styles.viewModalBody}>
+                    <Text style={{marginBottom: 4, fontWeight: 'bold'}}>Digite o nome de sua tarefa</Text>
+                    <TextInput
+                      underlineColorAndroid="transparent"
+                      style={styles.textInputModal}
+                      onChangeText={(text) => this.setState({text})}
+                      value={this.state.text}
+                    />
+                  </View>
+                  <View style={styles.viewFooterModal}>
+                    <TouchableOpacity
+                      style={[styles.buttonModal, styles.buttonSuccess]}
+                      onPress={this.onAddTask.bind(this)}
+                    >
+                      <Text style={{color: '#fff'}}>Adicionar</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                      style={[styles.buttonModal, styles.buttonCancel]}
+                      onPress={() => {
+                      this.setModalVisible(!this.state.modalVisible)
+                    }}>
+                      <Text>Cancelar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </Modal>
       </View>
     );
   }
+
+  componentDidMount() {
+    this.listenForItems(this.itemsRef);
+  }
+
+  listenForItems(itemsRef) {
+    itemsRef.on('value', (snap) => {
+
+      // get children as an array
+      var items = [];
+      snap.forEach((child) => {
+        items.push({
+          name: child.val().name,
+          done: child.val().done,
+          key: child.key
+        });
+      });
+
+      this.setState({
+        data: items
+      });
+
+    });
+  }
+
 }
 
 const dateWekly = (day) => {
@@ -241,6 +248,12 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: '#fff',
   },
+  subHeader: {
+    backgroundColor: '#F8F8FB',
+    height:160, 
+    justifyContent: 'center', 
+    alignItems:'center'
+  },
   actionText: {
     color: '#fff',
     fontSize: 40,
@@ -260,18 +273,108 @@ const styles = StyleSheet.create({
     borderRadius: 30
   },
   textDate: {
-    fontSize: 35,
-    fontWeight: '100',
-    color: '#FFF'
+    fontSize: 30,
+    fontFamily: 'Montserrat-ExtraLight',
+    color: '#1D1D26'
   },
   dayEventCss: {
-    marginTop: 0,
+    marginTop: 5,
     fontSize: 11,
-    color: '#FFF',
-    fontWeight: 'bold'
+    color: 'rgba(29,29,28, 0.5)',
+    fontFamily: 'Montserrat-Light'
   },
   listLine: {
-    fontSize: 14,
+    fontFamily: 'Montserrat-ExtraLight',
+    fontSize: 14
+  },
+  line: {
+    flexDirection:'row', 
+    height: 65,
+    borderBottomWidth: 0.5,
+    borderColor: '#DFE2E6'
+  },
+  viewBoxModal:{
+    justifyContent:'center', 
+    alignItems:'center',
+    flexDirection: 'column',
+    flex:1,
+    backgroundColor: 'rgba(0,0,0,0.5)'
+  },
+  viewModal: {
+    backgroundColor: '#FFF',
+    height:250,
+    width:'90%',
+    borderRadius: 20,
+    flexDirection:'column',
+    justifyContent: 'space-between',
+    
+  },
+  viewModalBoxHeader: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    backgroundColor:'#BA77FF',
+    height:50,
+    justifyContent:'center',
+    paddingHorizontal:15,
+  },
+  textModalHeader: {
+    fontSize: 20,
+    color: '#FFF',
+    fontWeight: '100'
+  },
+  viewModalBody: {
+    paddingHorizontal: 15,
+    justifyContent: 'center',
+    height: 130
+  },
+  viewFooterModal: {
+    paddingHorizontal: 15,
+    height:60,
+    flexDirection: 'row',
+    justifyContent: 'space-between'
+  },
+  textInputModal: {
+    borderWidth: 1,
+    borderColor: '#B2B2B2',
+    borderRadius: 5,
+    height:45,
+    fontSize: 15,
+    color: '#B2B2B2',
     fontWeight: '100',
+    paddingHorizontal: 10,
+    paddingTop:15,
+    justifyContent: 'center'
+  },
+  buttonModal: {
+    padding: 10,
+    width: '45%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 40,
+    borderRadius: 5
+  },
+  buttonSuccess: {
+    backgroundColor: '#50D2C2',
+  },
+  buttonCancel: {
+    borderColor: '#FF3366',
+    borderWidth: 1
+  },
+  inCheck: {
+    borderRadius: 30,
+    width:40, 
+    height:40, 
+    borderWidth: 1,
+    borderColor: '#50D2C2',
+  }, 
+  check: {
+    borderRadius: 50,
+    width:40, 
+    height:40,
+    paddingTop:5,
+    paddingLeft:5,
+    backgroundColor: '#50D2C2',
+    alignItems: 'center', 
+    justifyContent: 'center'
   }
 });
